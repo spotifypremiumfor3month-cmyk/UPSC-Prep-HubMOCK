@@ -3,20 +3,34 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: UPSC Prep Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: subjects
+    description: UPSC subjects
+  - name: questions
+    description: MCQ questions
+  - name: tests
+    description: Test series
+  - name: attempts
+    description: Test attempts
+  - name: pdfs
+    description: PDF study materials
+  - name: daily
+    description: Daily practice
+  - name: dashboard
+    description: Dashboard analytics
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +38,860 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── SUBJECTS ────────────────────────────────────────────────────────────────
+  /subjects:
+    get:
+      operationId: listSubjects
+      tags: [subjects]
+      summary: List all UPSC subjects
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+
+  # ─── QUESTIONS ───────────────────────────────────────────────────────────────
+  /questions:
+    get:
+      operationId: listQuestions
+      tags: [questions]
+      summary: List questions with optional filters
+      parameters:
+        - name: subject
+          in: query
+          schema: { type: string }
+        - name: topic
+          in: query
+          schema: { type: string }
+        - name: difficulty
+          in: query
+          schema: { type: string, enum: [easy, medium, hard] }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionListResponse"
+    post:
+      operationId: createQuestion
+      tags: [questions]
+      summary: Create a single MCQ question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+
+  /questions/bulk:
+    post:
+      operationId: bulkCreateQuestions
+      tags: [questions]
+      summary: Bulk create MCQ questions from parsed CSV/JSON data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkQuestionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkCreateResult"
+
+  /questions/{id}:
+    get:
+      operationId: getQuestion
+      tags: [questions]
+      summary: Get a question by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateQuestion
+      tags: [questions]
+      summary: Update a question
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteQuestion
+      tags: [questions]
+      summary: Delete a question
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ─── TESTS ───────────────────────────────────────────────────────────────────
+  /tests:
+    get:
+      operationId: listTests
+      tags: [tests]
+      summary: List all test series
+      parameters:
+        - name: subject
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, published, archived] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Test"
+    post:
+      operationId: createTest
+      tags: [tests]
+      summary: Create a test series
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Test"
+
+  /tests/{id}:
+    get:
+      operationId: getTest
+      tags: [tests]
+      summary: Get a test with its questions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestWithQuestions"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTest
+      tags: [tests]
+      summary: Update a test
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Test"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteTest
+      tags: [tests]
+      summary: Delete a test
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /tests/{id}/questions:
+    post:
+      operationId: addQuestionsToTest
+      tags: [tests]
+      summary: Add questions to a test series
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestQuestionsInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Test"
+
+  # ─── ATTEMPTS ────────────────────────────────────────────────────────────────
+  /attempts:
+    get:
+      operationId: listAttempts
+      tags: [attempts]
+      summary: List test attempts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Attempt"
+    post:
+      operationId: createAttempt
+      tags: [attempts]
+      summary: Submit a test attempt with answers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttemptInput"
+      responses:
+        "201":
+          description: Created with result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttemptResult"
+
+  /attempts/{id}:
+    get:
+      operationId: getAttempt
+      tags: [attempts]
+      summary: Get attempt with detailed result
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttemptResult"
+        "404":
+          description: Not found
+
+  # ─── PDFs ────────────────────────────────────────────────────────────────────
+  /pdfs:
+    get:
+      operationId: listPdfs
+      tags: [pdfs]
+      summary: List PDF study materials
+      parameters:
+        - name: subject
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pdf"
+    post:
+      operationId: createPdf
+      tags: [pdfs]
+      summary: Add a PDF study material record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PdfInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pdf"
+
+  /pdfs/{id}:
+    get:
+      operationId: getPdf
+      tags: [pdfs]
+      summary: Get a PDF material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pdf"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePdf
+      tags: [pdfs]
+      summary: Delete a PDF material
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── DAILY PRACTICE ──────────────────────────────────────────────────────────
+  /daily:
+    get:
+      operationId: listDailyPractice
+      tags: [daily]
+      summary: List all daily practice sets
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyPractice"
+    post:
+      operationId: createDailyPractice
+      tags: [daily]
+      summary: Create a daily practice set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DailyPracticeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPractice"
+
+  /daily/today:
+    get:
+      operationId: getTodayDailyPractice
+      tags: [daily]
+      summary: Get today's daily practice set
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPracticeWithQuestions"
+        "404":
+          description: No practice set for today
+
+  /daily/{id}:
+    get:
+      operationId: getDailyPractice
+      tags: [daily]
+      summary: Get a daily practice set with questions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPracticeWithQuestions"
+        "404":
+          description: Not found
+
+  # ─── DASHBOARD ───────────────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get overall platform statistics
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/subject-stats:
+    get:
+      operationId: getSubjectStats
+      tags: [dashboard]
+      summary: Get per-subject question and test counts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubjectStat"
+
+  /dashboard/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [dashboard]
+      summary: Get top scorers leaderboard
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
 
+    # ── Subject ───────────────────────────────────────────────────────────────
+    Subject:
+      type: object
+      required: [id, name, code, description, questionCount]
+      properties:
+        id:            { type: integer }
+        name:          { type: string }
+        code:          { type: string }
+        description:   { type: string }
+        questionCount: { type: integer }
+        createdAt:     { type: string, format: date-time }
+
+    # ── Question ──────────────────────────────────────────────────────────────
+    Question:
+      type: object
+      required: [id, text, optionA, optionB, optionC, optionD, correctOption, subject, difficulty]
+      properties:
+        id:            { type: integer }
+        text:          { type: string }
+        optionA:       { type: string }
+        optionB:       { type: string }
+        optionC:       { type: string }
+        optionD:       { type: string }
+        correctOption: { type: string, enum: [A, B, C, D] }
+        explanation:   { type: ["string", "null"] }
+        subject:       { type: string }
+        topic:         { type: ["string", "null"] }
+        difficulty:    { type: string, enum: [easy, medium, hard] }
+        year:          { type: ["integer", "null"] }
+        createdAt:     { type: string, format: date-time }
+
+    QuestionInput:
+      type: object
+      required: [text, optionA, optionB, optionC, optionD, correctOption, subject, difficulty]
+      properties:
+        text:          { type: string, minLength: 1 }
+        optionA:       { type: string, minLength: 1 }
+        optionB:       { type: string, minLength: 1 }
+        optionC:       { type: string, minLength: 1 }
+        optionD:       { type: string, minLength: 1 }
+        correctOption: { type: string, enum: [A, B, C, D] }
+        explanation:   { type: string }
+        subject:       { type: string, minLength: 1 }
+        topic:         { type: string }
+        difficulty:    { type: string, enum: [easy, medium, hard] }
+        year:          { type: integer }
+
+    QuestionUpdate:
+      type: object
+      properties:
+        text:          { type: string, minLength: 1 }
+        optionA:       { type: string, minLength: 1 }
+        optionB:       { type: string, minLength: 1 }
+        optionC:       { type: string, minLength: 1 }
+        optionD:       { type: string, minLength: 1 }
+        correctOption: { type: string, enum: [A, B, C, D] }
+        explanation:   { type: string }
+        subject:       { type: string }
+        topic:         { type: string }
+        difficulty:    { type: string, enum: [easy, medium, hard] }
+        year:          { type: integer }
+
+    QuestionListResponse:
+      type: object
+      required: [questions, total]
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+        total: { type: integer }
+
+    BulkQuestionInput:
+      type: object
+      required: [questions]
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionInput"
+
+    BulkCreateResult:
+      type: object
+      required: [created, failed]
+      properties:
+        created: { type: integer }
+        failed:  { type: integer }
+        errors:
+          type: array
+          items: { type: string }
+
+    # ── Test ──────────────────────────────────────────────────────────────────
+    Test:
+      type: object
+      required: [id, title, subject, duration, totalMarks, status, questionCount]
+      properties:
+        id:            { type: integer }
+        title:         { type: string }
+        description:   { type: ["string", "null"] }
+        subject:       { type: string }
+        duration:      { type: integer, description: "Duration in minutes" }
+        totalMarks:    { type: integer }
+        negativeMarks: { type: number }
+        status:        { type: string, enum: [draft, published, archived] }
+        questionCount: { type: integer }
+        attemptCount:  { type: integer }
+        scheduledFor:  { type: ["string", "null"], format: date }
+        createdAt:     { type: string, format: date-time }
+
+    TestInput:
+      type: object
+      required: [title, subject, duration, totalMarks]
+      properties:
+        title:         { type: string, minLength: 1 }
+        description:   { type: string }
+        subject:       { type: string, minLength: 1 }
+        duration:      { type: integer, minimum: 1 }
+        totalMarks:    { type: integer, minimum: 1 }
+        negativeMarks: { type: number, minimum: 0 }
+        status:        { type: string, enum: [draft, published, archived] }
+        scheduledFor:  { type: string, format: date }
+
+    TestUpdate:
+      type: object
+      properties:
+        title:         { type: string, minLength: 1 }
+        description:   { type: string }
+        subject:       { type: string }
+        duration:      { type: integer, minimum: 1 }
+        totalMarks:    { type: integer, minimum: 1 }
+        negativeMarks: { type: number, minimum: 0 }
+        status:        { type: string, enum: [draft, published, archived] }
+        scheduledFor:  { type: string, format: date }
+
+    TestWithQuestions:
+      type: object
+      required: [id, title, subject, duration, totalMarks, status, questionCount, attemptCount, questions]
+      properties:
+        id:            { type: integer }
+        title:         { type: string }
+        description:   { type: ["string", "null"] }
+        subject:       { type: string }
+        duration:      { type: integer }
+        totalMarks:    { type: integer }
+        negativeMarks: { type: number }
+        status:        { type: string, enum: [draft, published, archived] }
+        questionCount: { type: integer }
+        attemptCount:  { type: integer }
+        scheduledFor:  { type: ["string", "null"], format: date }
+        createdAt:     { type: string, format: date-time }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+
+    TestQuestionsInput:
+      type: object
+      required: [questionIds]
+      properties:
+        questionIds:
+          type: array
+          items: { type: integer }
+
+    # ── Attempt ───────────────────────────────────────────────────────────────
+    Attempt:
+      type: object
+      required: [id, testId, testTitle, score, totalMarks, percentage, timeTaken, submittedAt]
+      properties:
+        id:           { type: integer }
+        testId:       { type: integer }
+        testTitle:    { type: string }
+        score:        { type: number }
+        totalMarks:   { type: integer }
+        percentage:   { type: number }
+        timeTaken:    { type: integer, description: "Seconds taken" }
+        submittedAt:  { type: string, format: date-time }
+
+    AttemptInput:
+      type: object
+      required: [testId, answers, timeTaken]
+      properties:
+        testId:   { type: integer }
+        timeTaken: { type: integer, description: "Seconds taken" }
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerInput"
+
+    AnswerInput:
+      type: object
+      required: [questionId, selectedOption]
+      properties:
+        questionId:     { type: integer }
+        selectedOption: { type: ["string", "null"], enum: [A, B, C, D, null] }
+
+    AttemptResult:
+      type: object
+      required: [id, testId, testTitle, score, totalMarks, percentage, timeTaken, correct, incorrect, skipped, submittedAt, answers]
+      properties:
+        id:           { type: integer }
+        testId:       { type: integer }
+        testTitle:    { type: string }
+        score:        { type: number }
+        totalMarks:   { type: integer }
+        percentage:   { type: number }
+        timeTaken:    { type: integer }
+        correct:      { type: integer }
+        incorrect:    { type: integer }
+        skipped:      { type: integer }
+        submittedAt:  { type: string, format: date-time }
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerDetail"
+
+    AnswerDetail:
+      type: object
+      required: [questionId, questionText, selectedOption, correctOption, isCorrect]
+      properties:
+        questionId:     { type: integer }
+        questionText:   { type: string }
+        optionA:        { type: string }
+        optionB:        { type: string }
+        optionC:        { type: string }
+        optionD:        { type: string }
+        selectedOption: { type: ["string", "null"] }
+        correctOption:  { type: string }
+        isCorrect:      { type: boolean }
+        explanation:    { type: ["string", "null"] }
+
+    # ── PDF ───────────────────────────────────────────────────────────────────
+    Pdf:
+      type: object
+      required: [id, title, subject, fileUrl, fileSize]
+      properties:
+        id:          { type: integer }
+        title:       { type: string }
+        description: { type: ["string", "null"] }
+        subject:     { type: string }
+        topic:       { type: ["string", "null"] }
+        fileUrl:     { type: string }
+        fileSize:    { type: integer, description: "Size in bytes" }
+        pageCount:   { type: ["integer", "null"] }
+        uploadedAt:  { type: string, format: date-time }
+
+    PdfInput:
+      type: object
+      required: [title, subject, fileUrl, fileSize]
+      properties:
+        title:       { type: string, minLength: 1 }
+        description: { type: string }
+        subject:     { type: string, minLength: 1 }
+        topic:       { type: string }
+        fileUrl:     { type: string, minLength: 1 }
+        fileSize:    { type: integer, minimum: 0 }
+        pageCount:   { type: integer, minimum: 1 }
+
+    # ── Daily Practice ────────────────────────────────────────────────────────
+    DailyPractice:
+      type: object
+      required: [id, title, practiceDate, questionCount, subject]
+      properties:
+        id:            { type: integer }
+        title:         { type: string }
+        practiceDate:  { type: string, format: date }
+        subject:       { type: string }
+        questionCount: { type: integer }
+        createdAt:     { type: string, format: date-time }
+
+    DailyPracticeWithQuestions:
+      type: object
+      required: [id, title, practiceDate, subject, questionCount, questions]
+      properties:
+        id:            { type: integer }
+        title:         { type: string }
+        practiceDate:  { type: string, format: date }
+        subject:       { type: string }
+        questionCount: { type: integer }
+        createdAt:     { type: string, format: date-time }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+
+    DailyPracticeInput:
+      type: object
+      required: [title, practiceDate, subject, questionIds]
+      properties:
+        title:        { type: string, minLength: 1 }
+        practiceDate: { type: string, format: date }
+        subject:      { type: string, minLength: 1 }
+        questionIds:
+          type: array
+          items: { type: integer }
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [totalQuestions, totalTests, totalPdfs, totalAttempts, averageScore, todayHasPractice]
+      properties:
+        totalQuestions:    { type: integer }
+        totalTests:        { type: integer }
+        totalPdfs:         { type: integer }
+        totalAttempts:     { type: integer }
+        averageScore:      { type: number }
+        todayHasPractice:  { type: boolean }
+        questionsThisWeek: { type: integer }
+        testsPublished:    { type: integer }
+
+    ActivityItem:
+      type: object
+      required: [id, type, title, description, createdAt]
+      properties:
+        id:          { type: integer }
+        type:        { type: string, enum: [question_added, test_created, pdf_uploaded, attempt_submitted, daily_created] }
+        title:       { type: string }
+        description: { type: string }
+        createdAt:   { type: string, format: date-time }
+
+    SubjectStat:
+      type: object
+      required: [subject, questionCount, testCount, pdfCount]
+      properties:
+        subject:       { type: string }
+        questionCount: { type: integer }
+        testCount:     { type: integer }
+        pdfCount:      { type: integer }
+
+    LeaderboardEntry:
+      type: object
+      required: [rank, name, totalAttempts, averageScore, bestScore]
+      properties:
+        rank:          { type: integer }
+        name:          { type: string }
+        totalAttempts: { type: integer }
+        averageScore:  { type: number }
+        bestScore:     { type: number }

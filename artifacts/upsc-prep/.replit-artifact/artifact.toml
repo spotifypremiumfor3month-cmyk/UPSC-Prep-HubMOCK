@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "UPSC Prep Platform"
+description = "A full-featured UPSC exam preparation platform where admins can bulk-upload MCQs via CSV, upload PDF study materials, create timed mock test series, and schedule daily practice sets. Students can take tests, view detailed score reports, track their progress, and access study PDFs — all focused exclusively on UPSC Civil Services subjects."
+version = "1.0.0"
+id = "artifacts/upsc-prep"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21766
+
+[services.development]
+run = "pnpm --filter @workspace/upsc-prep run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/upsc-prep", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/upsc-prep/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21766"
+BASE_PATH = "/"
