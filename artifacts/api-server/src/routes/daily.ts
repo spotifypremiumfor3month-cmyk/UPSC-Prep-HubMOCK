@@ -37,7 +37,10 @@ router.post("/daily", async (req, res): Promise<void> => {
 
   const [dp] = await db.insert(dailyPracticeTable).values({
     title: parsed.data.title,
-    practiceDate: parsed.data.practiceDate,
+    practiceDate:
+      parsed.data.practiceDate instanceof Date
+        ? parsed.data.practiceDate.toISOString().slice(0, 10)
+        : parsed.data.practiceDate,
     subject: parsed.data.subject,
   }).returning();
 

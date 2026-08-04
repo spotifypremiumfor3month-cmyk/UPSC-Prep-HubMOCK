@@ -1,0 +1,1 @@
+- [Firebase auth and public files](firebase-auth-storage.md) — console provider/domain settings and server-side token checks are required alongside the app code.

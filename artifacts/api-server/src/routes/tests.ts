@@ -85,7 +85,10 @@ router.post("/tests", async (req, res): Promise<void> => {
     totalMarks: parsed.data.totalMarks,
     negativeMarks: parsed.data.negativeMarks ?? 0,
     status: parsed.data.status ?? "draft",
-    scheduledFor: parsed.data.scheduledFor ?? null,
+    scheduledFor:
+      parsed.data.scheduledFor instanceof Date
+        ? parsed.data.scheduledFor.toISOString().slice(0, 10)
+        : parsed.data.scheduledFor ?? null,
   }).returning();
 
   res.status(201).json(CreateTestResponse.parse({ ...test, questionCount: 0, attemptCount: 0 }));

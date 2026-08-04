@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { Toaster } from 'sonner';
@@ -19,6 +20,7 @@ import { AdminQuestionsBulk } from './pages/admin/questions-bulk';
 import { AdminQuestionsNew, AdminTests, AdminTestsNew, AdminDaily } from './pages/admin/stubs';
 import { AdminPdfs } from './pages/admin/pdfs';
 import { Login } from './pages/login';
+import { useAuth } from './contexts/AuthContext';
 
 function NotFound() {
   return (
@@ -39,6 +41,12 @@ const queryClient = new QueryClient({
 });
 
 function AppRoutes() {
+  const { loading, isAdmin } = useAuth();
+  if (loading) return null;
+
+  const adminRoute = (page: ReactNode) =>
+    isAdmin ? <Shell>{page}</Shell> : <Login />;
+
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -56,14 +64,14 @@ function AppRoutes() {
       <Route path="/pdfs"><Shell><Pdfs /></Shell></Route>
 
       {/* Admin routes */}
-      <Route path="/admin"><Shell><AdminRoot /></Shell></Route>
-      <Route path="/admin/questions"><Shell><AdminQuestions /></Shell></Route>
-      <Route path="/admin/questions/new"><Shell><AdminQuestionsNew /></Shell></Route>
-      <Route path="/admin/questions/bulk"><Shell><AdminQuestionsBulk /></Shell></Route>
-      <Route path="/admin/tests"><Shell><AdminTests /></Shell></Route>
-      <Route path="/admin/tests/new"><Shell><AdminTestsNew /></Shell></Route>
-      <Route path="/admin/pdfs"><Shell><AdminPdfs /></Shell></Route>
-      <Route path="/admin/daily"><Shell><AdminDaily /></Shell></Route>
+      <Route path="/admin">{adminRoute(<AdminRoot />)}</Route>
+      <Route path="/admin/questions">{adminRoute(<AdminQuestions />)}</Route>
+      <Route path="/admin/questions/new">{adminRoute(<AdminQuestionsNew />)}</Route>
+      <Route path="/admin/questions/bulk">{adminRoute(<AdminQuestionsBulk />)}</Route>
+      <Route path="/admin/tests">{adminRoute(<AdminTests />)}</Route>
+      <Route path="/admin/tests/new">{adminRoute(<AdminTestsNew />)}</Route>
+      <Route path="/admin/pdfs">{adminRoute(<AdminPdfs />)}</Route>
+      <Route path="/admin/daily">{adminRoute(<AdminDaily />)}</Route>
 
       <Route component={() => <Shell><NotFound /></Shell>} />
     </Switch>

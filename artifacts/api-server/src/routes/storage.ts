@@ -10,6 +10,7 @@ import {
   ObjectNotFoundError,
   ObjectStorageService,
 } from '../lib/objectStorage';
+import { isFirebaseAdminRequest } from '../lib/firebaseAuth';
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -38,9 +39,7 @@ function hasAuthenticatedSession(
 router.post(
   '/storage/uploads/request-url',
   async (req: Request, res: Response) => {
-    const ADMIN_EMAIL = 'spotifypremiumfor3month@gmail.com';
-    const callerEmail = req.headers['x-admin-email'] as string | undefined;
-    if (callerEmail !== ADMIN_EMAIL) {
+    if (!(await isFirebaseAdminRequest(req))) {
       res.status(403).json({ error: 'Forbidden' });
       return;
     }

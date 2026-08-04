@@ -9,8 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useListPdfs } from '@workspace/api-client-react';
 
 const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
-const ADMIN_EMAIL = 'spotifypremiumfor3month@gmail.com';
-
 const SUBJECTS = [
   'History', 'Geography', 'Polity', 'Economy', 'Environment',
   'Science & Technology', 'Ethics', 'Current Affairs', 'CSAT',
@@ -51,12 +49,15 @@ export function AdminPdfs() {
 
     setUploading(true);
     try {
+      if (!user) throw new Error('Please sign in with the admin Google account first.');
+      const idToken = await user.getIdToken();
+
       // Step 1: Request presigned upload URL
       const urlRes = await fetch(`${BASE_URL}/api/storage/uploads/request-url`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-email': user?.email ?? '',
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           name: file.name,
@@ -83,6 +84,9 @@ export function AdminPdfs() {
       const saveRes = await fetch(`${BASE_URL}/api/pdfs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // The API verifies this Firebase token before accepting metadata.
+        // Reusing the token also keeps the metadata write admin-only.
+        ...{ Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({
           title: form.title.trim(),
           subject: form.subject,
@@ -109,7 +113,12 @@ export function AdminPdfs() {
   const handleDelete = async (id: number, title: string) => {
     if (!confirm(`Delete "${title}"?`)) return;
     try {
-      const res = await fetch(`${BASE_URL}/api/pdfs/${id}`, { method: 'DELETE' });
+      if (!user) throw new Error('Please sign in with the admin Google account first.');
+      const idToken = await user.getIdToken();
+      const res = await fetch(`${BASE_URL}/api/pdfs/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (!res.ok) throw new Error('Delete failed');
       toast.success(`"${title}" deleted.`);
       queryClient.invalidateQueries({ queryKey: ['listPdfs'] });
