@@ -50,3 +50,5 @@ export * from './testUpdate';
 export * from './testUpdateStatus';
 export * from './testWithQuestions';
 export * from './testWithQuestionsStatus';
+export * from './uploadUrlRequest';
+export * from './uploadUrlResponse';

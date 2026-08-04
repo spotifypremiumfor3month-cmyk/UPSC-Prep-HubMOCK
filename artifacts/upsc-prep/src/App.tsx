@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { Toaster } from 'sonner';
 
+import { AuthProvider } from './contexts/AuthContext';
 import { Shell } from './components/layout/Shell';
 
 // Pages
@@ -15,7 +16,8 @@ import { Pdfs } from './pages/pdfs';
 import { AdminRoot } from './pages/admin/root';
 import { AdminQuestions } from './pages/admin/questions';
 import { AdminQuestionsBulk } from './pages/admin/questions-bulk';
-import { AdminQuestionsNew, AdminTests, AdminTestsNew, AdminPdfs, AdminDaily } from './pages/admin/stubs';
+import { AdminQuestionsNew, AdminTests, AdminTestsNew, AdminDaily } from './pages/admin/stubs';
+import { AdminPdfs } from './pages/admin/pdfs';
 import { Login } from './pages/login';
 
 function NotFound() {
@@ -41,18 +43,18 @@ function AppRoutes() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
-      
+
       {/* Protected routes wrapped in Shell */}
       <Route path="/dashboard"><Shell><Dashboard /></Shell></Route>
       <Route path="/tests"><Shell><TestsList /></Shell></Route>
-      
+
       {/* Test taking is full screen, so no Shell */}
       <Route path="/tests/:id"><TestDetail /></Route>
       <Route path="/tests/:id/result"><Shell><TestResult /></Shell></Route>
-      
+
       <Route path="/daily"><Shell><Daily /></Shell></Route>
       <Route path="/pdfs"><Shell><Pdfs /></Shell></Route>
-      
+
       {/* Admin routes */}
       <Route path="/admin"><Shell><AdminRoot /></Shell></Route>
       <Route path="/admin/questions"><Shell><AdminQuestions /></Shell></Route>
@@ -70,12 +72,14 @@ function AppRoutes() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-        <AppRoutes />
-      </WouterRouter>
-      <Toaster position="top-right" />
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          <AppRoutes />
+        </WouterRouter>
+        <Toaster position="top-right" />
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }
 
