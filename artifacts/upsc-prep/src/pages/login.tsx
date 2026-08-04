@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,14 +7,26 @@ import { toast } from 'sonner';
 
 export function Login() {
   const [, setLocation] = useLocation();
-  const { signInWithGoogle, loading } = useAuth();
+  const { signInWithGoogle, loading, user } = useAuth();
+
+  useEffect(() => {
+    if (user) setLocation('/dashboard');
+  }, [setLocation, user]);
 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
       setLocation('/dashboard');
-    } catch (err) {
-      toast.error('Sign-in failed. Please try again.');
+    } catch (err: any) {
+      const messages: Record<string, string> = {
+        'auth/unauthorized-domain':
+          'This website is not authorized in Firebase. Add its domain under Firebase Authentication → Settings → Authorized domains.',
+        'auth/operation-not-allowed':
+          'Google sign-in is disabled. Enable Google under Firebase Authentication → Sign-in method.',
+        'auth/popup-closed-by-user': 'The Google sign-in window was closed before completion.',
+        'auth/invalid-api-key': 'The Firebase API key is invalid or missing.',
+      };
+      toast.error(messages[err?.code] ?? `Sign-in failed${err?.message ? `: ${err.message}` : '. Please try again.'}`);
     }
   };
 
@@ -43,7 +55,7 @@ export function Login() {
               <path d="M10.976 28.57A14.46 14.46 0 0 1 10.24 24c0-1.592.277-3.136.736-4.57v-6.148H3.02A23.968 23.968 0 0 0 .48 24c0 3.878.928 7.548 2.54 10.718l7.956-6.148z" fill="#FBBC05"/>
               <path d="M24.48 9.498c3.54 0 6.714 1.216 9.21 3.604l6.9-6.9C36.393 2.39 30.958 0 24.48 0 15.148 0 6.977 5.206 3.02 13.282l7.956 6.148c1.904-5.694 7.224-9.932 13.504-9.932z" fill="#EA4335"/>
             </svg>
-            Continue with Google
+            Sign up / Sign in with Google
           </Button>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">

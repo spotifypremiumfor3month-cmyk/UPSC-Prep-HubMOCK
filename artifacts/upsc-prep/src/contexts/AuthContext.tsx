@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
+import {
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+  type AuthError,
+  type User,
+} from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 
 const ADMIN_EMAIL = 'spotifypremiumfor3month@gmail.com';
@@ -25,6 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Complete a redirect-based sign-in when the browser returns from Google.
+    getRedirectResult(auth).catch((error: AuthError) => {
+      console.error('Google redirect sign-in failed:', error.code, error.message);
+    });
+
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
@@ -33,7 +46,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
-    await signInWithPopup(auth, googleProvider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      const authError = error as AuthError;
+      // Replit previews and some mobile browsers block popups. Redirect is
+      // the reliable fallback and returns to this app after Google completes.
+      if (
+        authError.code === 'auth/popup-blocked' ||
+        authError.code === 'auth/operation-not-supported-in-this-environment' ||
+        authError.code === 'auth/web-storage-unsupported' ||
+        authError.code === 'auth/internal-error'
+      ) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+      throw error;
+    }
   };
 
   const logOut = async () => {

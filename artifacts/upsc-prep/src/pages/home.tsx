@@ -21,8 +21,8 @@ export function Home() {
           <Link href="/login">
             <Button variant="ghost" className="font-medium">Sign In</Button>
           </Link>
-          <Link href="/dashboard">
-            <Button variant="saffron" className="font-bold">Start Learning</Button>
+           <Link href="/login">
+             <Button variant="saffron" className="font-bold">Sign Up Free</Button>
           </Link>
         </div>
       </header>
@@ -39,9 +39,9 @@ export function Home() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Link href="/dashboard" className="w-full sm:w-auto">
+           <Link href="/login" className="w-full sm:w-auto">
             <Button size="lg" className="w-full text-base h-12 px-8">
-              Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+               Start Learning <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
           <Link href="/tests" className="w-full sm:w-auto">
