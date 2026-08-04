@@ -17,7 +17,7 @@ run = "pnpm --filter @workspace/upsc-prep run dev"
 [services.production]
 build = [ "pnpm", "--filter", "@workspace/upsc-prep", "run", "build" ]
 serve = "static"
-publicDir = "artifacts/upsc-prep/dist/public"
+publicDir = "artifacts/upsc-prep/dist"
 
 [[services.production.rewrites]]
 from = "/*"
